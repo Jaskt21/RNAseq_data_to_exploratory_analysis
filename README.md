@@ -1,1 +1,2 @@
-# RNAseq_data_to_exploratory_analysis
+# RNAseq data to exploratory analysis
+
