@@ -21,13 +21,18 @@ The following steps outline the pipeline used to process raw SRA data into count
 
 **1. Data Retrival and Extraction**  
 - Tools: sra-tools/3.0.3 (prefetch, fasterq-dump)
-- Context: Data on GEO is stored in a highly compressed .sra format to save space
+- Context: Data on GEO is stored in a highly compressed .sra format to save space.
     - **prefetch:** prefetch is used to download the data securely from the NCBI servers using the unique Run IDs  
       [View Script- prefetch](sra_script.sh)
     - **fasterq-dump:** then converts these files (.sra) into raw .fastq format  
       [View Script- fasterq-dump](fastq_dump.sh)
 
 **2. Quality Control**  
-- Tools: fas
+- Tools: fastqc/0.12.1, py-multiqc/1.28 (FastQC, MultiQC)
+- Context: The quality control process specifically involves checking for adequate read quality and verifying the overall GC content distribution of the dataset in a html output.
+    - **FastQC:** produces an individual report for each sample you run it on
+      [View Script- FastQC](FASTQC.sh)
+    - **MultiQC:** then takes all those individual reports and combines them into one summary dashboard, allowing you to compare all 10 samples simultaneously
+      [View Script- MultiQC](MULTIQC.sh)
 
 
