@@ -30,9 +30,12 @@ The following steps outline the pipeline used to process raw SRA data into count
 **2. Quality Control**  
 - Tools: fastqc/0.12.1, py-multiqc/1.28 (FastQC, MultiQC)
 - Context: The quality control process specifically involves checking for adequate read quality and verifying the overall GC content distribution of the dataset in a html output.
-    - **FastQC:** produces an individual report for each sample you run it on
+    - **FastQC:** produces an individual report for each sample you run it on  
       [View Script- FastQC](FASTQC.sh)
-    - **MultiQC:** then takes all those individual reports and combines them into one summary dashboard, allowing you to compare all 10 samples simultaneously
+    - **MultiQC:** then takes all those individual reports and combines them into one summary dashboard, allowing you to compare all 10 samples simultaneously  
       [View Script- MultiQC](MULTIQC.sh)
+
+**3. Alignment, Mapping & Quantification**  
+
 
 
