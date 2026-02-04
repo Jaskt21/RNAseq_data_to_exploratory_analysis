@@ -16,6 +16,10 @@ In this project, the dataset is used only to demonstrate RNA-seq data processing
 **Experiment type:** Expression profiling by high throughput sequencing (RNA-seq)  
 **Library layout:** Paired-end
 
-## ⚒️ The Workflow 
+## ⚒️ Analysis Pipeline  
+The following steps outline the pipeline used to process raw SRA data into count matrices, in preparation for downstream exploratory data analysis and differential expression in R.
+
+**1. Data Retrival and Extraction**  
+[View Script](sra_script.sh)
 
 
