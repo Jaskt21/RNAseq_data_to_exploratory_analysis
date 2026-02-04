@@ -16,7 +16,7 @@ In this project, the dataset is used only to demonstrate RNA-seq data processing
 **Experiment type:** Expression profiling by high throughput sequencing (RNA-seq)  
 **Library layout:** Paired-end
 
-## ⚒️ Analysis Pipeline  
+## ⚒️ Upstream Processing Pipeline   
 The following steps outline the pipeline used to process raw SRA data into count matrices, in preparation for downstream exploratory data analysis and differential expression in R.
 
 **1. Data Retrival and Extraction**  
@@ -36,6 +36,8 @@ The following steps outline the pipeline used to process raw SRA data into count
       [View Script- MultiQC](MULTIQC.sh)
 
 **3. Alignment, Mapping & Quantification**  
+- Tools: salmon/1.10.2, star/2.7.11 (Salmon, STAR)
+- Context: 
 
 
 
