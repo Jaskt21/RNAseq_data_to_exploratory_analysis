@@ -31,14 +31,24 @@ The following steps outline the pipeline used to process raw SRA data into count
 - Tools: fastqc/0.12.1, py-multiqc/1.28 (FastQC, MultiQC)
 - Context: The quality control process specifically involves checking for adequate read quality and verifying the overall GC content distribution of the dataset in a html output.
     - **FastQC:** produces an individual report for each sample you run it on  
-      [View Script- FastQC](FASTQC.sh)
+      [View Script FastQC](FASTQC.sh)
     - **MultiQC:** then takes all those individual reports and combines them into one summary dashboard, allowing you to compare all 10 samples simultaneously  
-      [View Script- MultiQC](MULTIQC.sh)
+      [View Script MultiQC](MULTIQC.sh)
 
 **3. Alignment, Mapping & Quantification**  
 - Tools: salmon/1.10.2, star/2.7.11, subread/2.0.6 (Salmon, STAR)
 - Context: The goal at this stage is to transform raw unordered sequencing reads (FASTQ files) into a structured count matrix. Whether utilising a traditional aligner like STAR or a pseudo-aligner like Salmon, the objective remains the same: to identify the genomic origin of each read and convert these digital signals into numerical values (counts) per gene. This "Count Matrix" serves as the essential entry point for all downstream statistical analysis, providing the raw data required for identifying differentially expressed genes (DGE) in R.
-    - **Salmon (Pseudoalignment):**  
+    - **Salmon (Pseudoalignment):** Salmon serves as a pseudoaligner, it involves breaking the cDNA transcriptome into small, fixed-length fragments called k-mers to create a searchable index.  Salmon then simply checks which transcripts are "compatible" with a read's k-mer signature, rather than the base-by-base alignment. This results in .sf files that contain both "Estimated Counts" for statistical testing and "TPM" values, which are counts adjusted for gene length and sequencing depth to allow for easy comparison between samples.
+ 
+      **Indexing:** We build a Salmon Index using the transcriptome (mRNA sequences) to create a searchable map of all known transcripts   
+      `salmon index -t Homo_sapiens.GRCh38.cdna.all.fa -i salmon_index`
+
+      **Quantification:** Using the salmon quant command, the software performs quasi-mapping. Instead of finding the exact base to base alignment, it quickly determines which transcript a read likely belongs to  
+      [View Script Salmon Quantification](salmon_script2.sh)
+
+    - **STAR (Traditional Alignment):** 
+      
+      
 
 
 
