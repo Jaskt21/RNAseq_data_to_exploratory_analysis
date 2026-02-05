@@ -48,7 +48,20 @@ The following steps outline the pipeline used to process raw SRA data into count
 
     - **STAR (Traditional Alignment):** STAR workflow provides a high-resolution, spatial alignment by mapping reads to the entire reference genome. Using the genomic DNA (FASTA) and a GTF annotation file. STAR aligns raw reads to the reference genome to produce BAM files, which record the exact coordinates of every sequence fragment. Since BAM files only contain locations, featureCounts must then cross-reference these coordinates against a GTF annotation to generate the final gene-count matrix.
  
-       **Indexing:** 
+       **Indexing:** STAR uses the genomic DNA (FASTA) and GTF annotation to build a searchable "map" of the genome. This index allows the software to quickly find the coordinates of millions of short reads  
+     [View Script Star Index](star_indexing.sh)
+
+      **Alignment:** The STAR aligner maps raw reads to the genome, producing a BAM file    
+      [View Script Star Alignment](star_mapping2.sh)
+
+       **Quantification via featureCounts:** Since a BAM file is just a list of locations, featureCounts is used to tally them up. It cross-references the BAM coordinates with the gene boundaries in the GTF file to determine which gene each read belongs to. Creating a txt file containing Gene IDs and their corresponding raw integer counts, which can be used for downstream analysis  
+      [View Script Star Quantifictaion](star_featureCounts.sh)
+
+      
+      
+
+  
+
       
       
 
