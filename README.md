@@ -36,8 +36,10 @@ The following steps outline the pipeline used to process raw SRA data into count
       [View Script- MultiQC](MULTIQC.sh)
 
 **3. Alignment, Mapping & Quantification**  
-- Tools: salmon/1.10.2, star/2.7.11 (Salmon, STAR)
-- Context: 
+- Tools: salmon/1.10.2, star/2.7.11, subread/2.0.6 (Salmon, STAR)
+- Context: The goal at this stage is to transform raw unordered sequencing reads (FASTQ files) into a structured count matrix. Whether utilising a traditional aligner like STAR or a pseudo-aligner like Salmon, the objective remains the same: to identify the genomic origin of each read and convert these digital signals into numerical values (counts) per gene. This "Count Matrix" serves as the essential entry point for all downstream statistical analysis, providing the raw data required for identifying differentially expressed genes (DGE) in R.
+    - **Salmon (Pseudoalignment):**  
+
 
 
 
