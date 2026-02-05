@@ -46,7 +46,9 @@ The following steps outline the pipeline used to process raw SRA data into count
       **Quantification:** Using the salmon quant command, the software performs quasi-mapping. Instead of finding the exact base to base alignment, it quickly determines which transcript a read likely belongs to  
       [View Script Salmon Quantification](salmon_script2.sh)
 
-    - **STAR (Traditional Alignment):** 
+    - **STAR (Traditional Alignment):** STAR workflow provides a high-resolution, spatial alignment by mapping reads to the entire reference genome. Using the genomic DNA (FASTA) and a GTF annotation file. STAR aligns raw reads to the reference genome to produce BAM files, which record the exact coordinates of every sequence fragment. Since BAM files only contain locations, featureCounts must then cross-reference these coordinates against a GTF annotation to generate the final gene-count matrix.
+ 
+       **Indexing:** 
       
       
 
