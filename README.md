@@ -27,17 +27,46 @@ The following steps outline the pipeline used to process raw SRA data into count
     - **fasterq-dump:** then converts these files (.sra) into raw .fastq format  
       [View Script: fasterq-dump](fastq_dump.sh)
 
+      What do we see in fastq files:
+      - Line 1: The sequence identifier  
+        ID, Instrument info (HWI-) , Floecell Details, Coordinates (lane and tile location), Read length
+      - Line 2: The raw sequences  
+        This is the actual biological data a string of nucleotide bases (A, C, G, T)
+      - Line 3: The Separator (+)  
+        A simple plus sign used to separate the sequence from the quality data
+      - Line 4: Quality Scores  
+        The string of symbols (like B7BFFBF) represents the Phred Quality Score for every single base in Line 2    
+
 **2. Quality Control**  
 - Tools: fastqc/0.12.1, py-multiqc/1.28 (FastQC, MultiQC)
 - Context: The quality control process specifically involves checking for adequate read quality and verifying the overall GC content distribution of the dataset in a html output.
     - **FastQC:** produces an individual report for each sample you run it on  
-      [View Script: FastQC](FASTQC.sh)
+      [View Script: FastQC](FASTQC.sh)  
     - **MultiQC:** then takes all those individual reports and combines them into one summary dashboard, allowing you to compare all 10 samples simultaneously  
       [View Script: MultiQC](MULTIQC.sh)
 
+      <ins>What does our multiQC output html contain?</ins>    
+      General stats:   
+      Dups (sequence duplications): 20-60%, is normal however higher percentage of duplication of 80-100% could be due to a number of reasons:
+      - PRC over amplification
+      - Low library complexity  
+      
+      GC Content:
+      - Percentage of bases that are G or C
+      - This is usually around 40-45%
+      - All samples should have a similar percentage
+      - A big shift in the GC content could be due to cross contamination or biases
+      
+      Seq:
+      - Total number of reads sequenced
+      - Paired end _1 and _2 should have identical counts
+
+      We can also use MultiQC to aggregate and visualise alignment statistics from STAR and quantification metrics from Salmon...
+      
 **3. Alignment, Mapping & Quantification**  
 - Tools: salmon/1.10.2, star/2.7.11, subread/2.0.6 (Salmon, STAR)
 - Context: The goal at this stage is to transform raw unordered sequencing reads (FASTQ files) into a structured count matrix. Whether utilising a traditional aligner like STAR or a pseudo-aligner like Salmon, the objective remains the same: to identify the genomic origin of each read and convert these digital signals into numerical values (counts) per gene. This "Count Matrix" serves as the essential entry point for all downstream statistical analysis, providing the raw data required for identifying differentially expressed genes R.
+  
     - **Salmon (Pseudoalignment):** Salmon serves as a pseudoaligner, it involves breaking the cDNA transcriptome into small, fixed-length fragments called k-mers to create a searchable index.  Salmon then determines which transcripts are compatible with a read’s k-mer signature rather than performing base-by-base alignment.This results in .sf files that contain both Estimated Counts for statistical testing and TPM values, which are counts normalised for gene length and sequencing depth to allow for comparison between samples.
       
       **Indexing:** We build a Salmon Index using the transcriptome (mRNA sequences) to create a searchable map of all known transcripts   
@@ -46,6 +75,13 @@ The following steps outline the pipeline used to process raw SRA data into count
       **Quantification:** Using the salmon quant command, the software performs quasi-mapping. Instead of finding the exact base to base alignment, it quickly determines which transcript a read likely belongs to  
       [View Script: Salmon Quantification](salmon_script2.sh)
 
+      **Output files:**
+      - quant.sf: This is the primary results file. It is a tab-separated text file containing the quantification estimates for each transcript, including columns like Name, Length, EffectiveLength, TPM (Transcripts Per Million), and NumReads.
+      - cmd_info.json: A JSON file that records the exact command-line parameters and options you used to run Salmon. It’s very useful for reproducibility.
+      - lib_format_counts.json: Contains details about the sequencing library format. It lists how many fragments were compatible with the expected library type (e.g., stranded vs. unstranded) and helps check if the data matches your assumptions.
+      - logs/: Contains the log files for the run, which record the progress, warnings, and any errors that occurred during the execution.  
+
+      
     - **STAR (Traditional Alignment):** The STAR workflow provides high-resolution, spatial alignment by mapping reads to the reference genome using genomic DNA (FASTA) and a GTF annotation file. STAR aligns raw reads to the genome to produce BAM files, which record the exact genomic coordinates of each sequence fragment. Since BAM files only contain alignment locations, featureCounts must then cross reference these coordinates against a GTF annotation to generate the final gene count matrix.  
  
        **Indexing:** STAR uses the genomic DNA (FASTA) and GTF annotation to build a searchable "map" of the genome. This index allows the software to quickly find the coordinates of millions of short reads  
