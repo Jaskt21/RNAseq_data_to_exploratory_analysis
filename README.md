@@ -61,7 +61,8 @@ The following steps outline the pipeline used to process raw SRA data into count
       - Total number of reads sequenced
       - Paired end _1 and _2 should have identical counts
 
-      We can also use MultiQC to aggregate and visualise alignment statistics from STAR and quantification metrics from Salmon...
+      **We can also use MultiQC to aggregate and visualise alignment statistics from STAR and quantification metrics from Salmon**
+      
       
 **3. Alignment, Mapping & Quantification**  
 - Tools: salmon/1.10.2, star/2.7.11, subread/2.0.6 (Salmon, STAR)
