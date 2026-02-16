@@ -1,6 +1,6 @@
 # RNAseq_data_to_exploratory_analysis
 
-## 🧬 Analysis of GSE81089 
+## Analysis of GSE81089 
 
 ### Project Overview 
 This repository contains a pipeline for processing of raw RNA-seq data from the NCBI Gene Expression Omnibus (GEO).  
@@ -16,7 +16,7 @@ In this project, the dataset is used only to demonstrate RNA-seq data processing
 **Experiment type:** Expression profiling by high throughput sequencing (RNA-seq)  
 **Library layout:** Paired-end
 
-## ⚒️ Upstream Processing Pipeline   
+## Upstream Processing Pipeline   
 The following steps outline the pipeline used to process raw SRA data into count matrices, in preparation for downstream exploratory data analysis and differential expression in R.
 
 **1. Data Retrival and Extraction**  
