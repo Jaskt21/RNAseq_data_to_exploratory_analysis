@@ -23,7 +23,7 @@ The following steps outline the pipeline used to process raw SRA data into count
 - Tools: sra-tools/3.0.3 (prefetch, fasterq-dump)
 - Context: Data on GEO is stored in a highly compressed .sra format to save space.
     - **prefetch:** prefetch is used to download the data securely from the NCBI servers using the unique Run IDs  
-      [View Script: prefetch](sra_script.sh)
+      [View Script: prefetch](Scripts/sra_script.sh)
     - **fasterq-dump:** then converts these files (.sra) into raw .fastq format  
       [View Script: fasterq-dump](fastq_dump.sh)
 
