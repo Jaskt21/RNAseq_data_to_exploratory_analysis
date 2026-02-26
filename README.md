@@ -25,7 +25,7 @@ The following steps outline the pipeline used to process raw SRA data into count
     - **prefetch:** prefetch is used to download the data securely from the NCBI servers using the unique Run IDs  
       [View Script: prefetch](Scripts/sra_script.sh)
     - **fasterq-dump:** then converts these files (.sra) into raw .fastq format  
-      [View Script: fasterq-dump](fastq_dump.sh)
+      [View Script: fasterq-dump](Scripts/fastq_dump.sh)
 
       What do we see in fastq files:
       - Line 1: The sequence identifier  
@@ -41,9 +41,9 @@ The following steps outline the pipeline used to process raw SRA data into count
 - Tools: fastqc/0.12.1, py-multiqc/1.28 (FastQC, MultiQC)
 - Context: The quality control process specifically involves checking for adequate read quality and verifying the overall GC content distribution of the dataset in a html output.
     - **FastQC:** produces an individual report for each sample you run it on  
-      [View Script: FastQC](/Scripts/FASTQC.sh)
+      [View Script: FastQC](Scripts/FASTQC.sh)
     - **MultiQC:** then takes all those individual reports and combines them into one summary dashboard, allowing you to compare all 10 samples simultaneously  
-      [View Script: MultiQC](MULTIQC.sh)
+      [View Script: MultiQC](Scripts/MULTIQC.sh)
 
       <ins>What does our multiQC output html contain?</ins>    
       General stats:   
@@ -62,6 +62,7 @@ The following steps outline the pipeline used to process raw SRA data into count
       - Paired end _1 and _2 should have identical counts
 
       **We can also use MultiQC to aggregate and visualise alignment statistics from STAR and quantification metrics from Salmon**
+      [View Script: Full MultiQC](Scripts/multiQC_full.sh)    
       
       
 **3. Alignment, Mapping & Quantification**  
@@ -74,7 +75,7 @@ The following steps outline the pipeline used to process raw SRA data into count
       `salmon index -t Homo_sapiens.GRCh38.cdna.all.fa -i salmon_index`
 
       **Quantification:** Using the salmon quant command, the software performs quasi-mapping. Instead of finding the exact base to base alignment, it quickly determines which transcript a read likely belongs to  
-      [View Script: Salmon Quantification](salmon_script2.sh)
+      [View Script: Salmon Quantification](Scripts/salmon_script2.sh)  
 
       **Output files:**
       - quant.sf: This is the primary results file. It is a tab-separated text file containing the quantification estimates for each transcript, including columns like Name, Length, EffectiveLength, TPM (Transcripts Per Million), and NumReads.
@@ -86,13 +87,26 @@ The following steps outline the pipeline used to process raw SRA data into count
     - **STAR (Traditional Alignment):** The STAR workflow provides high-resolution, spatial alignment by mapping reads to the reference genome using genomic DNA (FASTA) and a GTF annotation file. STAR aligns raw reads to the genome to produce BAM files, which record the exact genomic coordinates of each sequence fragment. Since BAM files only contain alignment locations, featureCounts must then cross reference these coordinates against a GTF annotation to generate the final gene count matrix.  
  
        **Indexing:** STAR uses the genomic DNA (FASTA) and GTF annotation to build a searchable "map" of the genome. This index allows the software to quickly find the coordinates of millions of short reads  
-     [View Script: Star Index](star_indexing.sh)
+     [View Script: Star Index](Scripts/star_indexing.sh)
 
       **Alignment:** The STAR aligner maps raw reads to the genome, producing coordinate sorted BAM files      
-      [View Script: Star Alignment](star_mapping2.sh)
+      [View Script: Star Alignment](Scripts/star_mapping2.sh)
 
-       **Quantification via featureCounts:** Since a BAM file is a list of aligned read coordinates, featureCounts is used to quantify gene expression. It cross references BAM alignments with gene features defined in the GTF file to determine which gene each read overlaps. This produces a .txt file containing gene IDs and their corresponding raw integer counts, which are suitable for downstream analysis  
-      [View Script: Star Quantifictaion](star_featureCounts.sh)
+       **1) Quantification via featureCounts:** Since a BAM file is a list of aligned read coordinates, featureCounts is used to quantify gene expression. It cross references BAM alignments with gene features defined in the GTF file to determine which gene each read overlaps. This produces a .txt file containing gene IDs and their corresponding raw integer counts, which are suitable for downstream analysis  
+      [View Script: Star Quantifictaion (featureCounts)](Scripts/star_featureCounts.sh)
+
+       **2) Quantification via --quantMode GeneCounts:** Instead of using tool like featureCounts, STAR can perform quantification during the alignment step itself using the --quantMode GeneCounts. This requires the same STAR Index and FASTQ files.  
+
+        -Output: This process generates a specific output file named ReadsPerGene.out.tab  
+      -Structure: The file contains four columns: Gene ID, unstranded counts, counts for the 1st read strand, and counts for the 2nd read strand  
+      -R input: The ReadsPerGene.out.tab file is the primary input for downstream differential expression analysis in RStudio
+       [View Script: Star Quantifictaion (quantMode](Scripts/star_quantMode.sh)    
+      
+      
+      
+      
+      
+      
 
       
       
