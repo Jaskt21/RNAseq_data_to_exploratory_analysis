@@ -101,7 +101,7 @@ The following steps outline the pipeline used to process raw SRA data into count
         -Output: This process generates a specific output file named ReadsPerGene.out.tab  
       -Structure: The file contains four columns: Gene ID, unstranded counts, counts for the 1st read strand, and counts for the 2nd read strand  
       -R input: The ReadsPerGene.out.tab file is the primary input for downstream differential expression analysis in RStudio  
-       [View Script: Star Quantifictaion (quantMode](Scripts/star_quantMode.sh)    
+       [View Script: Star Quantifictaion (quantMode)](Scripts/star_quantMode.sh)    
       
       
       
