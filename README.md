@@ -43,7 +43,7 @@ The following steps outline the pipeline used to process raw SRA data into count
     - **FastQC:** produces an individual report for each sample you run it on  
       [View Script: FastQC](Scripts/FASTQC.sh)
     - **MultiQC:** then takes all those individual reports and combines them into one summary dashboard, allowing you to compare all 10 samples simultaneously  
-      [View Script: MultiQC](Scripts/MULTIQC.sh)
+      [View Script: MultiQC](Scripts/MultiQC.sh)
 
       <ins>What does our multiQC output html contain?</ins>    
       General stats:   
@@ -61,9 +61,10 @@ The following steps outline the pipeline used to process raw SRA data into count
       - Total number of reads sequenced
       - Paired end _1 and _2 should have identical counts
 
-      **We can also use MultiQC to aggregate and visualise alignment statistics from STAR and quantification metrics from Salmon**
-      [View Script: Full MultiQC](Scripts/multiQC_full.sh)    
-      
+      **We can also use MultiQC to aggregate and visualise alignment statistics from STAR and quantification metrics from Salmon**    
+      [View Script: Full MultiQC](Scripts/mulitQC_full.sh)      
+   
+
       
 **3. Alignment, Mapping & Quantification**  
 - Tools: salmon/1.10.2, star/2.7.11, subread/2.0.6 (Salmon, STAR)
