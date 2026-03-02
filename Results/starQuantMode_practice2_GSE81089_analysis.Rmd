@@ -1,0 +1,131 @@
+---
+title: "STAR(QuantMode) analysis"
+author: "Jasveer Thethi"
+date: "2026-03-02"
+output: html_document
+---
+
+**The analysis of the STAR alignment output files, following the use of --quantMode, to analyse ReadsPerGene.out.tab output**
+
+```{r Prepare-for-countData-in-dds}
+# define directory path of 
+quant_dir2 = "/home/jkt21/mnt/network/bioinformatics/users/jkt21/rnaseq_GSE81089_workflow/star/star_featureCounts2"
+
+# search the directory for files ending in ReadsPerGene.out.tab.
+files = list.files(
+  quant_dir2,
+  pattern = "ReadsPerGene.out.tab",
+   recursive = FALSE,
+  full.names = TRUE
+)
+files
+
+# extract sample names
+sample_names2 = gsub("_ReadsPerGene.out.tab$","", basename(files))
+# uses basename() to strip away the long folder path and gsub() to remove the file extension suffix
+sample_names2
+
+# link names to file paths
+names(files) = sample_names2
+files
+```
+
+```{r Merge-Count-Files}
+# Merge and Format Count Data
+# Load data.table for fast file reading using the fread function
+library(data.table)
+
+# read the first file and selecting columns 1 (GeneID) and 4 (Counts)
+countData = data.frame(fread(files[1]))[c(1,4)]
+
+# Loop through the remaining files
+for(i in 2:length(files)) {
+   # Column-bind the 4th column (counts) from each subsequent file to the main table
+    countData = cbind(countData, data.frame(fread(files[i]))[4])
+}
+
+# Remove the first 4 rows of the dataframe
+countData = countData[c(5:nrow(countData)), ]
+
+# Assign descriptive names to columns, using "GeneID" for the first and sample IDs for the rest
+colnames(countData) = c("GeneID", sample_names2)
+
+# Set the "GeneID" column as the official row names for easier indexing
+rownames(countData) = countData$GeneID
+
+# Remove the first column (the redundant GeneID column) to leave only numerical count data
+countData = countData[, -1]
+```
+
+```{r ColData-meta_data2}
+# Load the Metadata
+meta_data2 = read.csv("/home/jkt21/mnt/network/bioinformatics/users/jkt21/rnaseq_GSE81089_workflow/star/star_featureCounts2/meta_data_sex_smoking.csv")
+
+# set row names
+# assigns the values in column X (usually the Sample IDs like "SRR...") as the actual row names of the data frame
+rownames(meta_data2) = meta_data2$X
+
+# clean up the table
+# deletes the column named X from the data frame
+meta_data2$X = NULL
+
+# synchronize counts and metadata
+# reorders the columns of your countData matrix to match the exact order of the rows in meta_data2
+countData = countData[, rownames(meta_data2)]
+
+# do > all(colnames(countData) == rownames(meta_data2)) to check if the column names of CountData matches the row names of meta_data2 as this is critical for DESeq analysis.
+```
+
+
+```{r}
+library(DESeq2)
+
+# create a DESeqDataSet object from a count matrix
+# 'countData' contains raw gene counts
+# 'colData' contains sample metadata (sex and smoking status)
+# The design formula '~sex + smoking' tells DESeq2 to model gene expression 
+# based on smoking status while controlling for the effect of sex.
+dds2 = DESeqDataSetFromMatrix(countData = countData, 
+colData = meta_data2, design =  ~sex + smoking)
+
+dds2 = DESeq(dds2)
+```
+
+
+```{r}
+# Apply Variance Stabilising Transformation (VST) 
+vsdata2 = vst(dds2, blind = TRUE)
+
+plotPCA(vsdata2, intgroup = c("smoking", "sex"))
+```
+
+
+```{r}
+plotPCA(vsdata2, intgroup = "smoking")
+```
+
+```{r}
+plotPCA(vsdata2, intgroup = "sex")
+```
+
+```{r Differential-expression-results}
+# # Load the Independent Hypothesis Weighting package
+# library(IHW)
+# 
+# # Extracting results, comparing smokers and non-smokers
+# res2 = results(
+#   dds2,
+#   contrast=c("smoking", "current", "never"),
+#   alpha=0.05,
+#   filterFun=IHW::ihw)
+# res2
+```
+
+```{r}
+# summary(res2)
+```
+
+```{r}
+# plotMA(res2, alpha = 0.05)
+```
+
