@@ -1,0 +1,261 @@
+---
+title: "Salmon analysis"
+author: "Jasveer Thethi"
+date: "2026-01-29"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r Load-packages, message=FALSE, warning=FALSE}
+#Load all necessary packages for analysis 
+library(tximport)
+library(ensembldb)
+library(AnnotationHub)
+library(DESeq2)
+```
+
+```{r query-ensdb}
+# Connect to AnnotationHub: a central browser for Bioconductor genomic resources
+Hub = AnnotationHub()
+
+# Query for Human (Hsapiens) Ensembl database version 109
+ensdb_query = query(Hub, c("EnsDB", "sapiens", "109"))
+ensdb_query
+
+# Download from Ensembl annotation 
+ensdb_109 = ensdb_query[['AH109606']]
+```
+
+```{r Creating-tx2-object}
+#Creating a tx2gene object for tximport function
+tx_data = transcripts(ensdb_109, return.type = "DataFrame")
+
+tx2gene = tx_data[, c("tx_id", "gene_id")]
+
+tx2gene
+```
+
+```{r Create-vector-for-files-input-for-tximport}
+# Define path to Salmon quantification outputs
+quant_dir = "/home/jkt21/mnt/network/bioinformatics/users/jkt21/rnaseq_GSE81089_workflow/salmon/quant_sf_all"
+
+# Find all 'quant.sf' files to use as input for tximport
+quant_files = list.files(
+  quant_dir,
+  pattern = "quant.sf$",
+  full.names = TRUE
+)
+quant_files
+
+
+# Remove file extensions create a vector of sample names
+sample_names = gsub("_quant2_quant.sf$","", basename(quant_files))
+sample_names
+
+# Assign sample names to the file vector (this is required for tximport (files input))
+names(quant_files) = sample_names
+quant_files
+```
+
+```{r txi-object}
+#Create txi object using with out files index, and tx2gene object
+txi = tximport(quant_files, type = "salmon", tx2gene = tx2gene,ignoreTxVersion = TRUE)
+```
+
+```{r Creating-meta_data-for-our-DESeqDataSet}
+# Define experimental groups (factors), for this im gong to include sex and smoking as my fcators
+
+#Sex
+sex = factor(c("male", "male", "female", "male", "female", "male", "male", "female", "male", "male"))
+
+#Smoking
+smoking = factor(
+  c(3, 2, 2, 1, 2, 1, 1, 1, 2, 2),
+  levels = c(3,2,1),
+  labels = c("never", "ex_lt1yr", "current")
+)
+
+#samples names to match the order of the condition vector 
+sample_names
+
+# Create the colData dataframe, rows are samples, columns are experimental variables
+meta_data = data.frame(
+  sex = sex,
+  smoking   = smoking,
+  row.names = sample_names
+)
+meta_data
+
+# write meta_data as csv for future use
+write.csv(meta_data, file = "meta_data_sex_smoking.csv")
+```
+
+**Building metadata table**
+Define your experimental factors:  
+
+Sex and smoking status
+
+1) Sex 
+-Create a factor vector where each entry corresponds to one sample
+
+2) Smoking: 
+-Encode smoking status as a factor with labels
+-Each value again corresponds sample-by-sample in the same order as sex
+
+3) Ensure sample names line up
+
+4) You combine everything into a metadata table
+This creates a metadata dataframe where:
+Rows = samples
+Columns = experimental variables
+
+```{r Running-DESeq2}
+# Import the transcript-level counts into a DESeq2 object, setting smoking as the main condition of interest, while also controlling for sex
+dds = DESeqDataSetFromTximport(txi, colData = meta_data, design = ~sex + smoking)
+dds
+
+# Run the DESeq2 differential expression analysis
+dds = DESeq(dds)
+```
+1) Creating the DESeq2 dataset (dds)\
+
+What DESeq2 is getting here:\
+  txi\
+- Output from tximport\
+- Contains transcript-level counts that have already been summarised to genes\
+- These are your raw expression measurements\
+
+  colData = meta_data\
+- Each row = one sample\
+- Columns = experimental factors (sex, smoking)\
+- Row names must match the column names of the count matrix in txi\
+
+2) The design formula: ~ smoking + sex\
+  DESeq2 will model gene expression as:\
+  expression ~ smoking status plus sex\
+
+This means:\
+  - You are testing sex differences while controlling for smoking\
+  - And smoking effects while controlling for sex\
+  
+Does the order matter:\
+-smoking is adjusted for first\
+-sex effects are estimated after accounting for smoking\
+
+## Data Visualisation
+
+### Creating a PCA plot
+
+```{r Visualise-results-PCA1-sex}
+# Apply Variance Stabilising Transformation (VST) 
+vsdata = vst(dds, blind = TRUE)
+
+plotPCA(vsdata, intgroup = "sex")
+```
+
+**What the VST step is doing**\
+RNA-seq count data has:\
+  -huge range of values\
+  -mean–variance dependence\
+VST (variance stabilising transformation):\
+  -makes expression values more comparable across genes\
+  -reduces the influence of very highly expressed genes\
+  -prepares the data for PCA (which assumes roughly equal variance)\
+
+blind = TRUE means:\
+  -the transformation does not use the experimental design\
+
+So at this point, you have normalised, transformed expression data suitable for visualisation.\
+
+**A PCA (Principal Component Analysis) looks at the entire transcriptome**\
+
+  **What is our PCA1-sex Plot showing?**\
+  We are asking:\
+  “Does sex explain a large proportion of the overall variation in gene expression?”\
+  Together PC1 and PC2 has total variability of 51%, this is not ideal, the higher the total variable the       better, this means that the data originally had many variables.\
+  
+  The overlap in the data:
+  - sex does not dominate global variation\
+  - sex effects may still exist, just subtler\
+
+```{r Visualise-results-PCA2-smoking}
+plotPCA(vsdata, intgroup = "smoking")
+```
+
+**What is our PCA1-sex Plot showing?**\
+  We are asking:\
+  “Is smoking status a major source of variation across samples?”\
+  
+  From the plot there is a partial separation which may mean smoking affects some genes, but not the dominant   source of variation.\
+
+```{r Visualise-results-PCA3-sex+smoking}
+plotPCA(vsdata, intgroup = c("smoking", "sex"))
+```
+
+**What is our PCA3-sex+smoking Plot showing?**\
+  We are asking:\
+  “How do samples group when I consider sex and smoking together”\
+  
+  What can we see:\
+  PC1 (x-axis) = the largest source of variation\
+  PC2 (y-axis) = the second largest, independent source\
+  
+  The big pattern:\
+  - PC1 seems to be driven mainly by smoking status\
+  
+  Look at the horizontal spread:\
+  Samples on the far right (PC1 ≈ +50)\
+    → current:male\
+  Samples on the left (PC1 ≈ −40 to −20)\
+    → mostly ex_lt1yr and never\
+
+This suggests:\
+Smoking status explains a large chunk of global expression variation\
+  
+
+**In conclusion from PCA:**\
+PCA of variance-stabilized expression data did not show strong separation by sex, suggesting that sex is not a dominant driver of global transcriptional variation in this dataset. Smoking status showed modest structure along PC1, although a slight overlap between groups remained, indicating that much of the observed variation reflects individual-level differences rather than the experimental factors alone.\
+  
+```{r Differential-expression-results}
+# # Load the Independent Hypothesis Weighting package
+# library(IHW)
+# 
+# # Extracting results, comparing smokers and non-smokers
+# res = results(
+#   dds,
+#   contrast=c("smoking", "current", "never"),
+#   alpha=0.05,
+#   filterFun=IHW::ihw)
+# res
+```
+
+
+```{r}
+# summary(res)
+```
+
+Differential expression analysis was performed using DESeq2 to compare gene expression between current and never smokers while adjusting for sex. For each gene, a generalised linear model was fitted and statistical significance was assessed using Wald tests. Multiple testing correction was carried out using independent hypothesis weighting (IHW) to improve detection power while controlling the false discovery rate. The purpose of this analysis is to identify genes whose expression is specifically associated with smoking status, beyond global variation seen in exploratory analyses such as PCA.\
+
+```{r MA-plot}
+# plotMA(res, alpha=0.05)
+```
+
+An MA plot shows how log2 fold change depends on gene expression level, and highlights which genes are significantly differentially expressed.\
+
+  Axes:\
+  x-axis: mean of normalized counts\
+    how highly expressed a gene is (averaged across samples)\
+  y-axis: log2 fold change\
+    here: current smokers vs never smokers\
+    above 0 = higher in current smokers\
+    below 0 = higher in never smokers\
+    
+  What it says about smoking effects:\
+  Looking at the blue points:\
+    - There are significant genes in both directions\
+    - some higher in smokers\
+    - some higher in never smokers\
+  Most significant genes are at:\
+    - moderate expression levels\
+    - not just extreme low-count noise\
