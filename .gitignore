@@ -1,0 +1,5 @@
+*.fastq.gz
+*.fastq
+*.pdf
+*.bam
+*.sam
