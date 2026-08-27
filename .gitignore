@@ -1,0 +1,10 @@
+
+#files to ignore 
+*.DS_Store
+
+#result_files
+*.fastq.gz
+*.fastq
+*.pdf
+*.bam
+*.sam
